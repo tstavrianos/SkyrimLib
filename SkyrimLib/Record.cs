@@ -38,7 +38,7 @@ namespace SkyrimLib
                 var uncompressed = ZlibStream.UncompressBuffer(compressed);
                 if (uncompressedLength != uncompressed.Length)
                     throw new Exception("Decompressed field does not match the stored length");
-                uncompressedReader = new ArrayReader(uncompressed, 0, (int) uncompressedLength, true);
+                uncompressedReader = new ArrayReader(uncompressed, 0, (int) uncompressedLength, false);
                 fields = uncompressedReader;
             }
             else
