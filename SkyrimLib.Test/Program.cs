@@ -8,11 +8,12 @@ namespace SkyrimLib.Test
     {
         private static void Main(string[] args)
         {
-            if (args.Length == 0 || !File.Exists(args[0])) return;
+            var filename = @"..\..\..\..\data\Skyrim.esm";
+            if (args.Length != 0 && File.Exists(args[0])) filename = args[0];
             Console.WriteLine($"Memory used before: {GC.GetTotalMemory(false)}");
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            var m = new ModFile(args[0]);
+            var m = new ModFile(filename);
             var loading = stopWatch.ElapsedMilliseconds;
             Console.WriteLine($"Loading took: {loading}");
             Console.WriteLine($"Memory used after: {GC.GetTotalMemory(false)}");
