@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace SkyrimLib
 {
@@ -12,9 +11,9 @@ namespace SkyrimLib
         public ModFile(string filename)
         {
             this.Children = new List<IRecordOrGroup>();
-            using (var fs = File.OpenRead(filename))
+            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, FileOptions.SequentialScan))
             {
-                using (var br = new BinaryReader(fs, Encoding.ASCII, true))
+                using (var br = new BinaryReader(fs))
                 {
                     while (true)
                     {
@@ -23,12 +22,13 @@ namespace SkyrimLib
                         {
                             var type = header.ReadUInt32(0);
                             var size = header.ReadUInt32(4);
+
                             if (type == Group.GRUP)
                             {
                                 size -= 24;
                             }
 
-                            using (var data = br.NextChunk((int) size))
+                            using (var data = br.NextChunk((int)size))
                             {
                                 if (type == Group.GRUP)
                                 {
