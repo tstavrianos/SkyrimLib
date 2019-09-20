@@ -20,10 +20,9 @@ namespace SkyrimLib.Test
             Console.WriteLine($"Loading took: {loading}ms");
             Console.WriteLine($"Memory used after: {GC.GetTotalMemory(false)} bytes");
 
-            Tests.TraverseModFile.Run(m);
-
-            using (var tw = File.CreateText("test.txt")) Tests.GenerateDictionary.Run(m, tw);
-
+            //Tests.TraverseModFile.Run(m);
+            Tests.TestGenerated.Run(m);
+            
             Console.WriteLine($"Memory usage before dispose: {GC.GetTotalMemory(false)} bytes");
 
             m.Dispose();

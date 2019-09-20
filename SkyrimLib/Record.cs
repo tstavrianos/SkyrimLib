@@ -2,22 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Ionic.Zlib;
+// ReSharper disable ClassCanBeSealed.Global
 
 namespace SkyrimLib
 {
-    public sealed class Record : IRecordOrGroup
+    public class Record : IRecordOrGroup
     {
         public uint Type { get; }
-        public uint Size { get; }
+        public uint Size { get; private set; }
         public uint Flags { get; set; }
         public uint Id { get; set; }
         public uint Revision { get; set; }
         public ushort Version { get; set; }
         public ushort Unknown22 { get; }
-        public List<SubRecord> Fields { get; }
+        protected List<SubRecord> Fields { get; }
         private bool Compressed => (this.Flags & 0b00000000000001000000000000000000) != 0;
+        public int FieldCount => this.Fields.Count;
 
-        public Record(IReader headerReader, IReader dataReader)
+        internal Record(IReader headerReader, IReader dataReader)
         {
             this.Type = headerReader.ReadUInt32(0);
             this.Size = headerReader.ReadUInt32(4);
@@ -54,12 +56,18 @@ namespace SkyrimLib
                 var actualSize = overrideDataSize != 0 ? overrideDataSize : dataSize;
                 var fieldHead = fields.Slice(0, 6);
                 var fieldData = fields.Slice(6, (int) actualSize);
-                var field = new SubRecord(fieldHead, fieldData, overrideDataSize);
+                var field = Registry.ParsedSubRecords.TryGetValue((this.Type, fieldHead.ReadUInt32(0)), out var constructor) ? constructor(fieldHead, fieldData, overrideDataSize) : new SubRecord(fieldHead, fieldData, overrideDataSize);
 
                 this.Fields.Add(field);
                 overrideDataSize = field.Type == SubRecord.XXXX ? fields.ReadUInt32(6) : 0;
                 fields = fields.Slice((int) actualSize + 6);
             }
+        }
+
+        protected Record(uint type)
+        {
+            this.Type = type;
+            this.Fields = new List<SubRecord>();
         }
 
         public void Write(IWriter writer)
@@ -68,22 +76,23 @@ namespace SkyrimLib
             {
                 using (var fieldWriter = new StreamWriter(ms))
                 {
-                    foreach (var f in this.Fields)
+                    var fields = this.GetSubRecordsForWriting();
+                    foreach (var f in fields)
                     {
                         f.Write(fieldWriter);
                     }
 
-                    var dataSize = (uint) ms.Length;
+                    this.Size = (uint) ms.Length;
                     byte[] compressed = null;
                     var uncompressed = ms.ToArray();
                     if (this.Compressed)
                     {
                         compressed = ZlibStream.CompressBuffer(uncompressed);
-                        dataSize = (uint) compressed.Length + 4;
+                        this.Size = (uint) compressed.Length + 4;
                     }
 
                     writer.WriteUInt32(this.Type);
-                    writer.WriteUInt32(dataSize);
+                    writer.WriteUInt32(this.Size);
                     writer.WriteUInt32(this.Flags);
                     writer.WriteUInt32(this.Id);
                     writer.WriteUInt32(this.Revision);
@@ -99,8 +108,15 @@ namespace SkyrimLib
                     {
                         writer.WriteBytes(uncompressed);
                     }
+
+                    fields = null;
                 }
             }
+        }
+
+        protected virtual IReadOnlyList<SubRecord> GetSubRecordsForWriting()
+        {
+            return new SubRecord[0];
         }
 
         public void Dispose()

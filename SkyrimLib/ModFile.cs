@@ -11,6 +11,7 @@ namespace SkyrimLib
         public ModFile(string filename)
         {
             this.Children = new List<IRecordOrGroup>();
+            
             using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read, 8192,
                 FileOptions.SequentialScan))
             {
@@ -31,14 +32,16 @@ namespace SkyrimLib
 
                         var data = br.NextChunk((int) size);
 
+                        IRecordOrGroup item;
                         if (type == Group.GRUP)
                         {
-                            this.Children.Add(new Group(header, data));
+                            item = new Group(header, data);
                         }
                         else
                         {
-                            this.Children.Add(new Record(header, data));
+                            item = Registry.ParsedRecords.TryGetValue(type, out var constructor) ? constructor(header, data) : new Record(header, data);
                         }
+                        this.Children.Add(item);
                     }
                 }
             }

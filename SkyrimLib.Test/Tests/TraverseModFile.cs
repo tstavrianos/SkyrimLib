@@ -14,7 +14,7 @@ namespace SkyrimLib.Test.Tests
         {
             _records++;
 
-            _fields += record.Fields.Count;
+            _fields += record.FieldCount;
         }
 
         private static void FoundGroup(Group group)

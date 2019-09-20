@@ -18,7 +18,7 @@ namespace SkyrimLib
         public ushort Version { get; set; }
         public ushort Unknown2 { get; set; }
         public List<IRecordOrGroup> Children { get; }
-
+        
         public Group(IReader headerReader, IReader dataReader)
         {
             this.Type = headerReader.ReadUInt32(0);
@@ -51,7 +51,7 @@ namespace SkyrimLib
                 {
                     actualSize += 24;
                     var childData = children.Slice(24, (int) size);
-                    item = new Record(childHeader, childData);
+                    item = Registry.ParsedRecords.TryGetValue(type, out var constructor) ? constructor(childHeader, childData) : new Record(childHeader, childData);
                 }
 
                 this.Children.Add(item);
