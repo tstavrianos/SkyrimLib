@@ -1,6 +1,4 @@
 using System;
-using System.Buffers;
-
 namespace SkyrimLib
 {
     public sealed class SubRecord: IDisposable
@@ -9,14 +7,14 @@ namespace SkyrimLib
         public const uint XXXX = 1482184792;
         public uint Type { get; }
         public ushort DataSize { get; }
-        public byte[] Data { get; }
+        public byte[] Data { get; private set; }
 
         public SubRecord(IReader headerReader, IReader dataReader, uint overrideDataSize = 0)
         {
             this.Type = headerReader.ReadUInt32(0);
             this.DataSize = headerReader.ReadUInt16(4);
             var actualSize = overrideDataSize != 0 ? (int) overrideDataSize : this.DataSize;
-            this.Data = ArrayPool<byte>.Shared.Rent(actualSize);
+            this.Data = new byte[actualSize];
             dataReader.ReadBytes(0, this.Data, 0, actualSize);
         }
 
@@ -29,7 +27,7 @@ namespace SkyrimLib
 
         public void Dispose()
         {
-            ArrayPool<byte>.Shared.Return(this.Data);
+            this.Data = null;
         }
     }
 }

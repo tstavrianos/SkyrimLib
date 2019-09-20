@@ -4,66 +4,35 @@ using System.IO;
 
 namespace SkyrimLib.Test
 {
-    public static class Program
+    internal static class Program
     {
         private static void Main(string[] args)
         {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
             var filename = @"..\..\..\..\data\Skyrim.esm";
             if (args.Length != 0 && File.Exists(args[0])) filename = args[0];
-            Console.WriteLine($"Memory used before: {GC.GetTotalMemory(false)}");
             var stopWatch = new Stopwatch();
+            Console.WriteLine($"Memory used before: {GC.GetTotalMemory(false)} bytes");
             stopWatch.Start();
             var m = new ModFile(filename);
             var loading = stopWatch.ElapsedMilliseconds;
-            Console.WriteLine($"Loading took: {loading}");
-            Console.WriteLine($"Memory used after: {GC.GetTotalMemory(false)}");
-            var fields = 0;
-            var records = 0;
-            var groups = 0;
+            Console.WriteLine($"Loading took: {loading}ms");
+            Console.WriteLine($"Memory used after: {GC.GetTotalMemory(false)} bytes");
 
-            void FoundRecord(Record record)
-            {
-                records++;
+            Tests.TraverseModFile.Run(m);
 
-                fields += record.Fields.Count;
-            }
+            using (var tw = File.CreateText("test.txt")) Tests.GenerateDictionary.Run(m, tw);
 
-            void FoundGroup(Group group)
-            {
-                groups++;
-                foreach (var child in group.Children)
-                {
-                    switch (child)
-                    {
-                        case Group group1:
-                            FoundGroup(group1);
-                            break;
-                        case Record record1:
-                            FoundRecord(record1);
-                            break;
-                    }
-                }
-            }
-            stopWatch.Restart();
-            foreach (var child in m.Children)
-            {
-                switch (child)
-                {
-                    case Group group1:
-                        FoundGroup(group1);
-                        break;
-                    case Record record1:
-                        FoundRecord(record1);
-                        break;
-                }
-            }
+            Console.WriteLine($"Memory usage before dispose: {GC.GetTotalMemory(false)} bytes");
 
-            var parsing = stopWatch.ElapsedMilliseconds;
-            stopWatch.Stop();
-            
-            Console.WriteLine($"Found Groups: {groups}, Records: {records}, Subrecords: {fields}");
-            Console.WriteLine($"Parsing took: {parsing}");
-            Console.WriteLine($"Memory usage before termination: {GC.GetTotalMemory(false)}");        
-        }
+            m.Dispose();
+
+            Console.WriteLine($"Memory usage after dispose: {GC.GetTotalMemory(false)} bytes");
+            m = null;
+            GC.Collect();
+
+            Console.WriteLine($"Memory usage after gc collect: {GC.GetTotalMemory(false)} bytes");
+       }
     }
 }

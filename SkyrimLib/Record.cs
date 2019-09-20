@@ -30,15 +30,15 @@ namespace SkyrimLib
             this.Fields = new List<SubRecord>();
 
             IReader fields;
-            ArrayReader uncompressedReader = null;
             if (this.Compressed)
             {
                 var uncompressedLength = dataReader.ReadUInt32(0);
-                var compressed = dataReader.ReadBytes(4, (int) this.Size - 4);
+                var compressed = new byte[(int) this.Size - 4];
+                dataReader.ReadBytes(4, compressed, 0, compressed.Length);
                 var uncompressed = ZlibStream.UncompressBuffer(compressed);
                 if (uncompressedLength != uncompressed.Length)
                     throw new Exception("Decompressed field does not match the stored length");
-                uncompressedReader = new ArrayReader(uncompressed, 0, (int) uncompressedLength, false);
+                var uncompressedReader = new ArrayReader(uncompressed, 0, (int) uncompressedLength);
                 fields = uncompressedReader;
             }
             else
@@ -52,23 +52,14 @@ namespace SkyrimLib
                 if (fields.Length < 4) break;
                 var dataSize = fields.ReadUInt16(4);
                 var actualSize = overrideDataSize != 0 ? overrideDataSize : dataSize;
-                SubRecord field;
-                using (var fieldHead = fields.Slice(0, 6))
-                {
-                    using (var fieldData = fields.Slice(6, (int) actualSize))
-                        field = new SubRecord(fieldHead, fieldData, overrideDataSize);
-                }
+                var fieldHead = fields.Slice(0, 6);
+                var fieldData = fields.Slice(6, (int) actualSize);
+                var field = new SubRecord(fieldHead, fieldData, overrideDataSize);
 
                 this.Fields.Add(field);
                 overrideDataSize = field.Type == SubRecord.XXXX ? fields.ReadUInt32(6) : 0;
                 fields = fields.Slice((int) actualSize + 6);
             }
-
-            if (this.Compressed)
-            {
-                uncompressedReader.Dispose();
-            }
-
         }
 
         public void Write(IWriter writer)
@@ -115,6 +106,7 @@ namespace SkyrimLib
         public void Dispose()
         {
             foreach(var child in this.Fields) child.Dispose();
+            this.Fields.Clear();
         }
     }
 }

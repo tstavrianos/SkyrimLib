@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace SkyrimLib
 {
-    public sealed class Group: IRecordOrGroup
+    public sealed class Group : IRecordOrGroup
     {
         // ReSharper disable once InconsistentNaming
         public const uint GRUP = 1347768903;
@@ -17,7 +18,7 @@ namespace SkyrimLib
         public ushort Version { get; set; }
         public ushort Unknown2 { get; set; }
         public List<IRecordOrGroup> Children { get; }
-        
+
         public Group(IReader headerReader, IReader dataReader)
         {
             this.Type = headerReader.ReadUInt32(0);
@@ -28,30 +29,29 @@ namespace SkyrimLib
             this.Unknown1 = headerReader.ReadUInt16(18);
             this.Version = headerReader.ReadUInt16(20);
             this.Unknown2 = headerReader.ReadUInt16(22);
-            
+
             this.Children = new List<IRecordOrGroup>();
 
             var children = dataReader;
             while (true)
-            {                
+            {
                 if (children.Length < 4) break;
                 var type = children.ReadUInt32(0);
                 var size = children.ReadUInt32(4);
                 IRecordOrGroup item;
                 var actualSize = size;
-                using (var childHeader = children.Slice(0, 24))
+                var childHeader = children.Slice(0, 24);
+
+                if (type == GRUP)
                 {
-                    if (type == GRUP)
-                    {
-                        using (var childData = children.Slice(24, (int) size - 24))
-                            item = new Group(childHeader, childData);
-                    }
-                    else
-                    {
-                        actualSize += 24;
-                        using (var childData = children.Slice(24, (int) size))
-                            item = new Record(childHeader, childData);
-                    }
+                    var childData = children.Slice(24, (int) size - 24);
+                    item = new Group(childHeader, childData);
+                }
+                else
+                {
+                    actualSize += 24;
+                    var childData = children.Slice(24, (int) size);
+                    item = new Record(childHeader, childData);
                 }
 
                 this.Children.Add(item);
@@ -87,7 +87,8 @@ namespace SkyrimLib
 
         public void Dispose()
         {
-            foreach(var child in this.Children) child.Dispose();
+            foreach (var child in this.Children) child.Dispose();
+            this.Children.Clear();
         }
     }
 }

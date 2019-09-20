@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -9,20 +8,17 @@ namespace SkyrimLib
     public sealed class ArrayReader: IReader
     {
         private readonly ReadonlyArrayWrapper<byte> _data;
-        private readonly bool _rented;
 
         public ArrayReader(ReadonlyArrayWrapper<byte> data)
         {
             this._data = data;
             this.Length = data.Length;
-            this._rented = data.Rented;
         }
 
-        public ArrayReader(byte[] data, int offset, int length, bool rented = false)
+        public ArrayReader(byte[] data, int offset, int length)
         {
             this._data = new ReadonlyArrayWrapper<byte>(data, offset, length);
             this.Length = length;
-            this._rented = rented;
         }
         
         public long Length { get; }
@@ -36,7 +32,7 @@ namespace SkyrimLib
 
         public byte[] ReadBytes(int position, int count)
         {
-            var ret = ArrayPool<byte>.Shared.Rent(count);
+            var ret = new byte[count];
             this._data.Span.Slice(position, count).CopyTo(ret);
             return ret;
         }
@@ -99,10 +95,5 @@ namespace SkyrimLib
         }
 
         public ReadOnlySpan<byte> ReadSpan(int position, int length) => this._data.Span.Slice(position, length);
-
-        public void Dispose()
-        {
-            if(this._rented) ArrayPool<byte>.Shared.Return(this._data.Array);
-        }
     }
 }
