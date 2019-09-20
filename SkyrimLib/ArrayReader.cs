@@ -29,7 +29,7 @@ namespace SkyrimLib
 
         private T ReadInternal<T>(int position) where T : unmanaged
         {
-            return Unsafe.ReadUnaligned<T>(ref MemoryMarshal.GetReference(this._data.Span));
+            return Unsafe.ReadUnaligned<T>(ref MemoryMarshal.GetReference(this._data.Span.Slice(position)));
         }
         
         public byte ReadByte(int position) => this._data.Span[position];
