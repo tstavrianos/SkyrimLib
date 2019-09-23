@@ -80,11 +80,15 @@ namespace SkyrimLib.Generator
             private readonly Method _constructorEmpty;
             private readonly Method _getSubRecordsForWriting;
             private readonly string _name;
-            private readonly Namespace _ns;
-            private RecordBuilder(string type, string description, Namespace ns)
+            private readonly Base _base;
+            private RecordBuilder(string type, string description)
             {
+                this._base = new Base();
+                this._base.Using.Add("System.Collections.Generic");
+                this._base.Using.Add("System.Linq");
+                var ns = new Namespace("SkyrimLib");
+                this._base.Namespaces.Add(ns);
                 this._name = type;
-                this._ns = ns;
                 Records.Add(type);
                 this._genClass = new Class(type) {Modifiers = Modifiers.Public};
                 var s1 = new Field("uint", "FieldType")
@@ -122,9 +126,9 @@ namespace SkyrimLib.Generator
                 ns.Types.Add(this._genClass);
             }
 
-            internal static RecordBuilder Begin(string type, string description, Namespace ns)
+            internal static RecordBuilder Begin(string type, string description)
             {
-                return new RecordBuilder(type, description, ns);
+                return new RecordBuilder(type, description);
             }
             
             private static string GetLength(string name, FileFormat format)
@@ -245,7 +249,13 @@ namespace SkyrimLib.Generator
                 length.Body.AppendLine($"return (ushort) ({GetLength(null, format)});");
                 c.Members.Add(length);
 
-                this._ns.Types.Add(c);
+                var bse = new Base();
+                bse.Using.Add("System.Collections.Generic");
+                bse.Using.Add("System.Linq");
+                var ns = new Namespace("SkyrimLib");
+                bse.Namespaces.Add(ns);
+                ns.Types.Add(c);
+                File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}_{name}.cs", bse.BuildCode(true));
             }
             
             internal void AddSubRecordList(string name, string description, FileFormat format)
@@ -316,7 +326,13 @@ namespace SkyrimLib.Generator
                 length.Body.AppendLine($"return (ushort) (this.Values.Count * {format.Size});");
                 c.Members.Add(length);
 
-                this._ns.Types.Add(c);
+                var bse = new Base();
+                bse.Using.Add("System.Collections.Generic");
+                bse.Using.Add("System.Linq");
+                var ns = new Namespace("SkyrimLib");
+                bse.Namespaces.Add(ns);
+                ns.Types.Add(c);
+                File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}_{name}.cs", bse.BuildCode(true));
             }
 
             internal void AddSubRecordListStruct(string name, string description,
@@ -423,13 +439,21 @@ namespace SkyrimLib.Generator
                 }
                 length.Body.AppendLine("return (ushort) (" + string.Join(" + ", lengths) + ");");
 
-                this._ns.Types.Add(c);
+                var bse = new Base();
+                bse.Using.Add("System.Collections.Generic");
+                bse.Using.Add("System.Linq");
+                var ns = new Namespace("SkyrimLib");
+                bse.Namespaces.Add(ns);
+                ns.Types.Add(c);
+                File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}_{name}.cs", bse.BuildCode(true));
             }
 
             internal void End()
             {
                 this._constructorRead.Body.AppendLine("this.Fields.Clear();");
                 this._getSubRecordsForWriting.Body.AppendLine("return ret;");
+                
+                File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}.cs", this._base.BuildCode(true));
             }
         }
         
@@ -490,12 +514,12 @@ namespace SkyrimLib.Generator
                     }
                 }
         }
-        private static void ParseRecord([NotNull] XElement record, Namespace ns)
+        private static void ParseRecord([NotNull] XElement record)
         {
             var type = record.Attribute("type").Value;
             var description = record.Attribute("description").Value;
 
-            var c = RecordBuilder.Begin(type, description, ns);
+            var c = RecordBuilder.Begin(type, description);
 
             foreach (var field in record.Elements("SubRecords").First().Elements("SubRecord"))
             {
@@ -505,53 +529,63 @@ namespace SkyrimLib.Generator
             c.End();
         }
 
+        private static void GenerateRegistry()
+        {
+            var bse = new Base();
+            bse.Using.Add("System");
+            bse.Using.Add("System.Collections.Generic");
+            
+            var ns = new Namespace("SkyrimLib");
+            bse.Namespaces.Add(ns);
+            
+            var c = new Class("Registry");
+            ns.Types.Add(c);
+            c.Modifiers = Modifiers.Internal | Modifiers.Static;
+            var f1 = new Field("IReadOnlyDictionary<uint, Func<IReader, IReader, Record>>", "ParsedRecords")
+            {
+                Modifiers = Modifiers.Internal | Modifiers.Static | Modifiers.ReadOnly
+            };
+            c.Members.Add(f1);
+            var f2 = new Field(
+                "IReadOnlyDictionary<(uint record, uint subrecord), Func<IReader, IReader, uint, SubRecord>>",
+                "ParsedSubRecords") {Modifiers = Modifiers.Internal | Modifiers.Static | Modifiers.ReadOnly};
+            c.Members.Add(f2);
+
+            var m = new Method(null, "Registry") {Modifiers = Modifiers.Static, Body = new Builder()};
+            m.Body.AppendLine("ParsedRecords = new Dictionary<uint, Func<IReader, IReader, Record>> {");
+            m.Body.EnterBlock();
+            foreach (var r in Records)
+            {
+                m.Body.AppendLine($"{{{r.Title()}.FieldType, (headerReader, dataReader) => new {r.Title()}(headerReader, dataReader)}},");
+            }
+            m.Body.LeaveBlock();
+            m.Body.AppendLine("};");
+            m.Body.AppendLine("ParsedSubRecords = new Dictionary<(uint record, uint subrecord), Func<IReader, IReader, uint, SubRecord>> {");
+            m.Body.EnterBlock();
+            foreach (var sr in SubRecords)
+            {
+                m.Body.AppendLine($"{{({sr.main}.FieldType, {sr.sub}.FieldType), (headerReader, dataReader, size) => new {sr.sub}(headerReader, dataReader, size)}},");
+            }
+            m.Body.LeaveBlock();
+            m.Body.AppendLine("};");
+            c.Members.Add(m);
+            
+            File.WriteAllText("../../../../SkyrimLib/Generated/Registry.cs", bse.BuildCode(true));
+        }
+        
         private static void Main(string[] args)
         {
             FileFormats.Parse("resources/FileFormats.xml");
-            var b = new Base
-            {
-                Comment = @"
-ReSharper disable RedundantUsingDirective
-ReSharper disable RedundantCast
-ReSharper disable InvertIf
-ReSharper disable InconsistentNaming
-ReSharper disable ConvertToAutoPropertyWithPrivateSetter
-ReSharper disable ConvertToAutoPropertyWhenPossible
-ReSharper disable UnusedMember.Global
-ReSharper disable ConvertIfStatementToConditionalTernaryExpression
-ReSharper disable ClassCanBeSealed.Global
-ReSharper disable ArrangeAccessorOwnerBody
-ReSharper disable UseObjectOrCollectionInitializer
-            "
-            };
-
-            b.Using.Add("System");
-            b.Using.Add("System.Collections");
-            b.Using.Add("System.Collections.Generic");
-            b.Using.Add("System.Linq");
-
-            var ns = new Namespace("SkyrimLib");
-
             var doc = XDocument.Load("resources/Records.xml");
 
             if (doc.Root != null)
                 foreach (var record in doc.Root.Elements("Record"))
                 {
-                    ParseRecord(record, ns);
+                    ParseRecord(record);
                 }
-            
-            b.Namespaces.Add(ns);
 
-            File.WriteAllText("test.cs", b.BuildCode(true));
+            GenerateRegistry();
 
-            foreach (var r in Records)
-            {
-                Console.WriteLine($"{{{r.Title()}.FieldType, (headerReader, dataReader) => new {r.Title()}(headerReader, dataReader)}},");
-            }
-            foreach (var sr in SubRecords)
-            {
-                Console.WriteLine($"{{({sr.main}.FieldType, {sr.sub}.FieldType), (headerReader, dataReader, size) => new {sr.sub}(headerReader, dataReader, size)}},");
-            }
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using SkyrimLib.Generated;
 
 namespace SkyrimLib.Test.Tests
 {
