@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyrimLib", "SkyrimLib\Skyr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyrimLib.Test", "SkyrimLib.Test\SkyrimLib.Test.csproj", "{B99D7B48-9320-45FE-9B6E-A9F3F1EB0BB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyrimLib.Generator", "SkyrimLib.Generator\SkyrimLib.Generator.csproj", "{7F5D9A46-AA50-4792-A836-F08CB751A3EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B99D7B48-9320-45FE-9B6E-A9F3F1EB0BB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B99D7B48-9320-45FE-9B6E-A9F3F1EB0BB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B99D7B48-9320-45FE-9B6E-A9F3F1EB0BB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

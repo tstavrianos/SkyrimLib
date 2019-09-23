@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Records>
+    <Record type="TES4" description="headerRecord">
+        <SubRecords>
+            <SubRecord name="HEDR" type="struct" description="header" required="true">
+                <Fields>
+                    <Field name="version" type="float"/>
+                    <Field name="numRecords" type="int32"/>
+                    <Field name="nextObjectId" type="ulong"/>
+                </Fields>
+            </SubRecord>
+            <SubRecord name="CNAM" type="zstring" description="author"/>
+            <SubRecord name="SNAM" type="zstring" description="description"/>
+            <SubRecord name="MasterRefs" type="list" subType="struct">
+                <Fields>
+                    <Field name="MAST" type="zstring" primary="true" description="master"/>
+                    <Field name="DATA" type="ulong" description="fileSize"/>
+                </Fields>
+            </SubRecord>
+            <SubRecord name="ONAM" type="list" subType="formId" description="overrides"/>
+            <SubRecord name="INTV" type="uint32" description="unknown1" required="true"/>
+            <SubRecord name="INCC" type="uint32" description="unknown2"/>
+        </SubRecords>
+    </Record>
+</Records>

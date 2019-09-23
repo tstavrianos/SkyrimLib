@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FileFormats readPrefix="Read" writePrefix="Write">
+    <type from="char" size="1" to="byte" description="8-bit character" suffix="Byte"/>
+    <type from="wchar" size="2" to="char" description="16-bit character" suffix="Char"/>
+
+    <type from="int8" size="1" to="sbyte" description="8-bit value, signed" suffix="SByte"/>
+    <type from="int16" size="2" to="short" description="16-bit value, signed" suffix="Int16"/>
+    <type from="int32" size="4" to="int" description="32-bit value, signed" suffix="Int32"/>
+    <type from="int64" size="8" to="long" description="64-bit value, signed" suffix="Int64"/>
+
+    <type from="uint8" size="1" to="byte" description="8-bit value, unsigned" suffix="Byte"/>
+    <type from="uint16" size="2" to="ushort" description="16-bit value, unsigned" suffix="UInt16"/>
+    <type from="uint32" size="4" to="uint" description="32-bit value, unsigned" suffix="UInt32"/>
+    <type from="uint64" size="8" to="ulong" description="64-bit value, unsigned" suffix="UInt64"/>
+
+    <type from="float32" size="4" to="float" description="32-bit value, floating-point" suffix="Single"/>
+    <type from="float64" size="8" to="double" description="64-bit value, floating-point" suffix="Double"/>
+
+    <type from="byte" size="1" to="sbyte" description="Byte, signed" suffix="SByte"/>
+    <type from="ubyte" size="1" to="byte" description="Byte, unsigned" suffix="Byte"/>
+
+    <type from="short" size="2" to="short" description="Short integer, signed" suffix="Int16"/>
+    <type from="long" size="4" to="int" description="Long integer, signed" suffix="Int32"/>
+    <type from="float" size="4" to="float" description="Floating point number" suffix="Single"/>
+
+    <type from="ushort" size="2" to="ushort" description="Short integer, unsigned" suffix="UInt16"/>
+    <type from="ulong" size="4" to="uint" description="Long integer, unsigned" suffix="UInt32"/>
+
+    <type from="formId" size="4" to="uint" description="A ulong used to identify a data object. May refer to a data object from a mod or new object created in-game." suffix="UInt32"/>
+    <type from="iref" size="4" to="uint" description="A ulong. Use as an index into the FormIDs Array to get the formId." suffix="UInt32"/>
+    <type from="hash" size="8" to="ulong" description="" suffix="UInt64"/>
+
+    <type from="bstring" to="string" lengthPrefixed="true" lengthType="byte" nullTerminated="false" suffix="StringPrefixLength8"/>
+    <type from="bzstring" to="how_to_implement" lengthPrefixed="true" lengthType="byte" nullTerminated="true" suffix="how_to_implement"/>
+
+    <type from="wstring" to="string" lengthPrefixed="true" lengthType="uint16" nullTerminated="false" suffix="StringPrefixLength16"/>
+    <type from="wzstring" to="how_to_implement" lengthPrefixed="true" lengthType="uint16" nullTerminated="true" suffix="how_to_implement"/>
+
+    <type from="zstring" to="string" lengthPrefixed="false" nullTerminated="true" suffix="StringZeroTerminated"/>
+    <type from="string" to="how_to_implement" lengthPrefixed="false" nullTerminated="false" suffix="how_to_implement"/>
+</FileFormats>

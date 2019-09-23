@@ -5,7 +5,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <ItemGroup>
+   <ItemGroup>
       <PackageReference Include="DotNetZip" Version="1.13.4" />
     </ItemGroup>
 
