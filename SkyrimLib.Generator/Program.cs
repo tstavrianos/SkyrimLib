@@ -83,14 +83,18 @@ namespace SkyrimLib.Generator
             private readonly Base _base;
             private RecordBuilder(string type, string description)
             {
-                this._base = new Base();
+                this._base = new Base
+                {
+                    Comment =
+                        "ReSharper disable RedundantUsingDirective\nReSharper disable InconsistentNaming\nReSharper disable UseObjectOrCollectionInitializer\nReSharper disable RedundantCast"
+                };
                 this._base.Using.Add("System.Collections.Generic");
                 this._base.Using.Add("System.Linq");
                 var ns = new Namespace("SkyrimLib");
                 this._base.Namespaces.Add(ns);
                 this._name = type;
                 Records.Add(type);
-                this._genClass = new Class(type) {Modifiers = Modifiers.Public};
+                this._genClass = new Class(type) {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 var s1 = new Field("uint", "FieldType")
                 {
                     Value = BitConverter.ToUInt32(System.Text.Encoding.ASCII.GetBytes(type), 0).ToString(),
@@ -191,7 +195,7 @@ namespace SkyrimLib.Generator
             private void AddSubRecordNoField(string name, string description, bool required, FileFormat format)
             {
                 SubRecords.Add((this._name, $"{this._name}_{name}"));
-                var c = new Class($"{this._name}_{name}");
+                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
                 var s1 = new Field("uint", "FieldType")
                 {
@@ -249,7 +253,11 @@ namespace SkyrimLib.Generator
                 length.Body.AppendLine($"return (ushort) ({GetLength(null, format)});");
                 c.Members.Add(length);
 
-                var bse = new Base();
+                var bse = new Base
+                {
+                    Comment =
+                        "ReSharper disable RedundantUsingDirective\nReSharper disable InconsistentNaming\nReSharper disable UseObjectOrCollectionInitializer\nReSharper disable RedundantCast"
+                };
                 bse.Using.Add("System.Collections.Generic");
                 bse.Using.Add("System.Linq");
                 var ns = new Namespace("SkyrimLib");
@@ -273,7 +281,7 @@ namespace SkyrimLib.Generator
                 this._getSubRecordsForWriting.Body.AppendLine($"if(this.{name}.Values.Count > 0) ret.Add(this.{name});");
                 
                 /* Backing class */
-                var c = new Class($"{this._name}_{name}");
+                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
                 var s1 = new Field("uint", "FieldType")
                 {
@@ -326,7 +334,11 @@ namespace SkyrimLib.Generator
                 length.Body.AppendLine($"return (ushort) (this.Values.Count * {format.Size});");
                 c.Members.Add(length);
 
-                var bse = new Base();
+                var bse = new Base
+                {
+                    Comment =
+                        "ReSharper disable RedundantUsingDirective\nReSharper disable InconsistentNaming\nReSharper disable UseObjectOrCollectionInitializer\nReSharper disable RedundantCast"
+                };
                 bse.Using.Add("System.Collections.Generic");
                 bse.Using.Add("System.Linq");
                 var ns = new Namespace("SkyrimLib");
@@ -388,7 +400,7 @@ namespace SkyrimLib.Generator
                     this._getSubRecordsForWriting.Body.AppendLine($"if(this.{name} != null) ret.Add(this.{name});");
                 }
                 
-                var c = new Class($"{this._name}_{name}");
+                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
                 var s1 = new Field("uint", "FieldType")
                 {
@@ -439,7 +451,11 @@ namespace SkyrimLib.Generator
                 }
                 length.Body.AppendLine("return (ushort) (" + string.Join(" + ", lengths) + ");");
 
-                var bse = new Base();
+                var bse = new Base
+                {
+                    Comment =
+                        "ReSharper disable RedundantUsingDirective\nReSharper disable InconsistentNaming\nReSharper disable UseObjectOrCollectionInitializer\nReSharper disable RedundantCast"
+                };
                 bse.Using.Add("System.Collections.Generic");
                 bse.Using.Add("System.Linq");
                 var ns = new Namespace("SkyrimLib");
@@ -531,13 +547,17 @@ namespace SkyrimLib.Generator
 
         private static void GenerateRegistry()
         {
-            var bse = new Base();
+            var bse = new Base
+            {
+                Comment =
+                    "ReSharper disable RedundantUsingDirective\nReSharper disable InconsistentNaming\nReSharper disable UseObjectOrCollectionInitializer\nReSharper disable RedundantCast"
+            };
             bse.Using.Add("System");
             bse.Using.Add("System.Collections.Generic");
             
             var ns = new Namespace("SkyrimLib");
             bse.Namespaces.Add(ns);
-            
+
             var c = new Class("Registry");
             ns.Types.Add(c);
             c.Modifiers = Modifiers.Internal | Modifiers.Static;

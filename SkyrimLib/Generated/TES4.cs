@@ -1,9 +1,14 @@
+// ReSharper disable RedundantUsingDirective
+// ReSharper disable InconsistentNaming
+// ReSharper disable UseObjectOrCollectionInitializer
+// ReSharper disable RedundantCast
+
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SkyrimLib
 {
-    public class TES4 : Record 
+    public sealed class TES4 : Record 
     {
         public const uint FieldType = 877872468;
         public readonly TES4_HEDR HEDR = new TES4_HEDR();

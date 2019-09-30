@@ -2,9 +2,9 @@ using System.IO;
 
 namespace SkyrimLib
 {
-    public static class Extensions
+    internal static class Extensions
     {
-        public static IReader NextChunk(this BinaryReader reader, int length)
+        internal static IReader NextChunk(this BinaryReader reader, int length)
         {
             var data = new byte[length];
             var offset=0;

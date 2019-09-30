@@ -18,8 +18,8 @@ namespace SkyrimLib
         public ushort Version { get; set; }
         public ushort Unknown2 { get; set; }
         public List<IRecordOrGroup> Children { get; }
-        
-        public Group(IReader headerReader, IReader dataReader)
+
+        internal Group(IReader headerReader, IReader dataReader)
         {
             this.Type = headerReader.ReadUInt32(0);
             this.Size = headerReader.ReadUInt32(4);

@@ -5,17 +5,17 @@ using System.Text;
 
 namespace SkyrimLib
 {
-    public sealed class ArrayReader: IReader
+    internal sealed class ArrayReader: IReader
     {
         private readonly ReadonlyArrayWrapper<byte> _data;
 
-        public ArrayReader(ReadonlyArrayWrapper<byte> data)
+        private ArrayReader(ReadonlyArrayWrapper<byte> data)
         {
             this._data = data;
             this.Length = data.Length;
         }
 
-        public ArrayReader(byte[] data, int offset, int length)
+        internal ArrayReader(byte[] data, int offset, int length)
         {
             this._data = new ReadonlyArrayWrapper<byte>(data, offset, length);
             this.Length = length;

@@ -21,7 +21,7 @@ namespace SkyrimLib
             this.Type = type;
         }
 
-        public void Write(IWriter writer)
+        internal void Write(IWriter writer)
         {
             writer.WriteUInt32(this.Type);
             this.DataSize = this.DataLength();

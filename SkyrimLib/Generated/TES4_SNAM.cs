@@ -1,9 +1,14 @@
+// ReSharper disable RedundantUsingDirective
+// ReSharper disable InconsistentNaming
+// ReSharper disable UseObjectOrCollectionInitializer
+// ReSharper disable RedundantCast
+
 using System.Collections.Generic;
 using System.Linq;
 
 namespace SkyrimLib
 {
-    public class TES4_SNAM : SubRecord 
+    public sealed class TES4_SNAM : SubRecord 
     {
         public const uint FieldType = 1296125523;
         public string Value;

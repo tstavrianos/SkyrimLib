@@ -3,11 +3,11 @@ using System.Text;
 
 namespace SkyrimLib
 {
-    public sealed class StreamWriter : IWriter
+    internal sealed class StreamWriter : IWriter
     {
         private readonly BinaryWriter _writer;
 
-        public StreamWriter(Stream stream)
+        internal StreamWriter(Stream stream)
         {
             this._writer = new BinaryWriter(stream, Encoding.ASCII, true);
         }
