@@ -6,6 +6,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyrimLib.Test", "SkyrimLib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkyrimLib.Generator", "SkyrimLib.Generator\SkyrimLib.Generator.csproj", "{7F5D9A46-AA50-4792-A836-F08CB751A3EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeGen", "..\CodeGen\CodeGen\CodeGen.csproj", "{AB96F930-7284-43E2-AF55-33BA4D625CF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EspAnalyser", "EspAnalyser\EspAnalyser.csproj", "{0CA4D89F-54D2-492D-B55C-460A0027F591}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyLoot", "MyLoot\MyLoot.csproj", "{03F946B5-A474-46AC-BA3A-9C1B5BCFBC59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +30,17 @@ Global
 		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F5D9A46-AA50-4792-A836-F08CB751A3EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB96F930-7284-43E2-AF55-33BA4D625CF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB96F930-7284-43E2-AF55-33BA4D625CF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB96F930-7284-43E2-AF55-33BA4D625CF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB96F930-7284-43E2-AF55-33BA4D625CF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CA4D89F-54D2-492D-B55C-460A0027F591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CA4D89F-54D2-492D-B55C-460A0027F591}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CA4D89F-54D2-492D-B55C-460A0027F591}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CA4D89F-54D2-492D-B55C-460A0027F591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03F946B5-A474-46AC-BA3A-9C1B5BCFBC59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03F946B5-A474-46AC-BA3A-9C1B5BCFBC59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03F946B5-A474-46AC-BA3A-9C1B5BCFBC59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03F946B5-A474-46AC-BA3A-9C1B5BCFBC59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
