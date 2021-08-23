@@ -4,7 +4,7 @@ namespace SkyrimLib
 {
     public interface IRecordOrGroup: IDisposable
     {
-        uint Type { get; }
+        Signature Type { get; }
         uint Size { get; }
 
         void Write(IWriter writer);

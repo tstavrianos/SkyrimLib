@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
+using SkyrimLib.Test.Tests;
 
 namespace SkyrimLib.Test
 {
@@ -8,9 +10,9 @@ namespace SkyrimLib.Test
     {
         private static void Main(string[] args)
         {
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            var filename = @"..\..\..\..\data\Skyrim.esm";
+            var filename = @"e:\SteamLibrary\steamapps\common\Skyrim Special Edition\Data\Skyrim.esm";
             if (args.Length != 0 && File.Exists(args[0])) filename = args[0];
             var stopWatch = new Stopwatch();
             Console.WriteLine($"Memory used before: {GC.GetTotalMemory(false)} bytes");
@@ -20,9 +22,9 @@ namespace SkyrimLib.Test
             Console.WriteLine($"Loading took: {loading}ms");
             Console.WriteLine($"Memory used after: {GC.GetTotalMemory(false)} bytes");
 
-            //Tests.TraverseModFile.Run(m);
-            Tests.TestGenerated.Run(m);
-            
+            //TraverseModFile.Run(m);
+            TestGenerated.Run(m);
+
             Console.WriteLine($"Memory usage before dispose: {GC.GetTotalMemory(false)} bytes");
 
             m.Dispose();
@@ -32,6 +34,6 @@ namespace SkyrimLib.Test
             GC.Collect();
 
             Console.WriteLine($"Memory usage after gc collect: {GC.GetTotalMemory(false)} bytes");
-       }
+        }
     }
 }

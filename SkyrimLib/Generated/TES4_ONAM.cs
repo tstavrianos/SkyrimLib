@@ -2,7 +2,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable RedundantCast
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +9,7 @@ namespace SkyrimLib
 {
     public sealed class TES4_ONAM : SubRecord 
     {
-        public const uint FieldType = 1296125519;
+        public static readonly Signature FieldType = Signature.FromString("ONAM");
         public readonly List<uint> Values = new List<uint>();
         internal TES4_ONAM(IReader headerReader, IReader dataReader, uint overrideDataSize = 0) : base(headerReader, dataReader, overrideDataSize)
         {

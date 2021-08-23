@@ -2,7 +2,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable RedundantCast
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +9,7 @@ namespace SkyrimLib
 {
     public sealed class TES4_MAST : SubRecord 
     {
-        public const uint FieldType = 1414742349;
+        public static readonly Signature FieldType = Signature.FromString("MAST");
         public string Value;
         internal TES4_MAST(IReader headerReader, IReader dataReader, uint overrideDataSize = 0) : base(headerReader, dataReader, overrideDataSize)
         {

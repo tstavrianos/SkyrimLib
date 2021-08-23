@@ -2,7 +2,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable RedundantCast
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +9,7 @@ namespace SkyrimLib
 {
     public sealed class TES4_HEDR : SubRecord 
     {
-        public const uint FieldType = 1380205896;
+        public static readonly Signature FieldType = Signature.FromString("HEDR");
         public float version;
         public int numRecords;
         public uint nextObjectId;

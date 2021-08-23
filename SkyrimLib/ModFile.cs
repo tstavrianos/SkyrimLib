@@ -22,7 +22,7 @@ namespace SkyrimLib
                         if (fs.Position + 4 >= fs.Length) break;
                         var header = br.NextChunk(24);
 
-                        var type = header.ReadUInt32(0);
+                        var type = Signature.Read(0, header);
                         var size = header.ReadUInt32(4);
 
                         if (type == Group.GRUP)
@@ -32,16 +32,24 @@ namespace SkyrimLib
 
                         var data = br.NextChunk((int) size);
 
-                        IRecordOrGroup item;
+                        IRecordOrGroup item = null;
+                        var keep = false;
                         if (type == Group.GRUP)
                         {
-                            item = new Group(header, data);
+                            /*item = new Group(header, data);
+                            keep = true;*/
                         }
                         else
                         {
-                            item = Registry.ParsedRecords.TryGetValue(type, out var constructor) ? constructor(header, data) : new Record(header, data);
+                            if (Registry.ParsedRecords.ContainsKey(type))
+                            {
+                                item = Registry.ParsedRecords.TryGetValue(type, out var constructor)
+                                    ? constructor(header, data)
+                                    : new Record(header, data);
+                                keep = true;
+                            }
                         }
-                        this.Children.Add(item);
+                        if(keep) this.Children.Add(item);
                     }
                 }
             }

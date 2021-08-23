@@ -5,25 +5,25 @@ namespace SkyrimLib
     public class SubRecord: IDisposable
     {
         // ReSharper disable once InconsistentNaming
-        public const uint XXXX = 1482184792;
-        public uint Type { get; }
+        public static readonly Signature XXXX = Signature.FromString("XXXX");
+        public Signature Type { get; }
         public ushort DataSize { get; private set; }
 
         internal SubRecord(IReader headerReader, IReader dataReader, uint overrideDataSize = 0)
         {
-            this.Type = headerReader.ReadUInt32(0);
+            this.Type = Signature.Read(0, headerReader);
             this.DataSize = headerReader.ReadUInt16(4);
             var actualSize = overrideDataSize != 0 ? (int) overrideDataSize : this.DataSize;
         }
 
-        protected SubRecord(uint type)
+        protected SubRecord(Signature type)
         {
             this.Type = type;
         }
 
         internal void Write(IWriter writer)
         {
-            writer.WriteUInt32(this.Type);
+            writer.WriteBytes(this.Type.Bytes);
             this.DataSize = this.DataLength();
             writer.WriteUInt16(this.DataSize);
             this.WriteData(writer);

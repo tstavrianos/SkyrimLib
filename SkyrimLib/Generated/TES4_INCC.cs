@@ -2,7 +2,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable RedundantCast
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +9,7 @@ namespace SkyrimLib
 {
     public sealed class TES4_INCC : SubRecord 
     {
-        public const uint FieldType = 1128484425;
+        public static readonly Signature FieldType = Signature.FromString("INCC");
         public uint Value;
         internal TES4_INCC(IReader headerReader, IReader dataReader, uint overrideDataSize = 0) : base(headerReader, dataReader, overrideDataSize)
         {

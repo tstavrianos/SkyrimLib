@@ -8,20 +8,20 @@ namespace SkyrimLib
 {
     public class Record : IRecordOrGroup
     {
-        public uint Type { get; }
+        public Signature Type { get; }
         public uint Size { get; private set; }
         public uint Flags { get; set; }
         public uint Id { get; set; }
         public uint Revision { get; set; }
         public ushort Version { get; set; }
         public ushort Unknown22 { get; }
-        protected List<SubRecord> Fields { get; }
+        public List<SubRecord> Fields { get; }
         private bool Compressed => (this.Flags & 0b00000000000001000000000000000000) != 0;
         public int FieldCount => this.Fields.Count;
 
         internal Record(IReader headerReader, IReader dataReader)
         {
-            this.Type = headerReader.ReadUInt32(0);
+            this.Type = Signature.Read(0, headerReader);
             this.Size = headerReader.ReadUInt32(4);
             this.Flags = headerReader.ReadUInt32(8);
             this.Id = headerReader.ReadUInt32(12);
@@ -54,17 +54,22 @@ namespace SkyrimLib
                 if (fields.Length < 4) break;
                 var dataSize = fields.ReadUInt16(4);
                 var actualSize = overrideDataSize != 0 ? overrideDataSize : dataSize;
-                var fieldHead = fields.Slice(0, 6);
-                var fieldData = fields.Slice(6, (int) actualSize);
-                var field = Registry.ParsedSubRecords.TryGetValue((this.Type, fieldHead.ReadUInt32(0)), out var constructor) ? constructor(fieldHead, fieldData, overrideDataSize) : new SubRecord(fieldHead, fieldData, overrideDataSize);
+                var type = Signature.Read(0, fields);
+                if(Registry.ParsedSubRecords.ContainsKey((this.Type, type)) || type == SubRecord.XXXX) {
+                    var fieldHead = fields.Slice(0, 6);
+                    var fieldData = fields.Slice(6, (int) actualSize);
+                    var field = Registry.ParsedSubRecords.TryGetValue((this.Type, Signature.Read(0, fieldHead)), out var constructor) ? constructor(fieldHead, fieldData, overrideDataSize) : 
+                    new SubRecord(fieldHead, fieldData, overrideDataSize);
 
-                this.Fields.Add(field);
-                overrideDataSize = field.Type == SubRecord.XXXX ? fields.ReadUInt32(6) : 0;
+                    this.Fields.Add(field);
+                }
+                
+                overrideDataSize = type == SubRecord.XXXX ? fields.ReadUInt32(6) : 0;
                 fields = fields.Slice((int) actualSize + 6);
             }
         }
 
-        protected Record(uint type)
+        protected Record(Signature type)
         {
             this.Type = type;
             this.Fields = new List<SubRecord>();
@@ -91,7 +96,7 @@ namespace SkyrimLib
                         this.Size = (uint) compressed.Length + 4;
                     }
 
-                    writer.WriteUInt32(this.Type);
+                    writer.WriteBytes(this.Type.Bytes);
                     writer.WriteUInt32(this.Size);
                     writer.WriteUInt32(this.Flags);
                     writer.WriteUInt32(this.Id);

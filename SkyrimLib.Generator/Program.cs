@@ -12,7 +12,10 @@ namespace SkyrimLib.Generator
     internal static class Program
     {
         private static readonly HashSet<string> Records = new HashSet<string>();
-        private static readonly HashSet<(string main, string sub)> SubRecords = new HashSet<(string main, string sub)>();
+
+        private static readonly HashSet<(string main, string sub)>
+            SubRecords = new HashSet<(string main, string sub)>();
+
         private static string Title(this string v)
         {
             return char.ToUpper(v[0]) + v.Substring(1);
@@ -57,10 +60,7 @@ namespace SkyrimLib.Generator
                     {
                         f.LengthPrefixed = bool.Parse(record.Attribute("lengthPrefixed").Value);
                         f.NullTerminated = bool.Parse(record.Attribute("nullTerminated").Value);
-                        if (f.LengthPrefixed)
-                        {
-                            f.LengthType = record.Attribute("lengthType").Value;
-                        }
+                        if (f.LengthPrefixed) f.LengthType = record.Attribute("lengthType").Value;
                     }
 
                     //Console.WriteLine(f.@from);
@@ -81,7 +81,8 @@ namespace SkyrimLib.Generator
             private readonly Method _getSubRecordsForWriting;
             private readonly string _name;
             private readonly Base _base;
-            private RecordBuilder(string type, string description)
+
+            private RecordBuilder(string name, string description)
             {
                 this._base = new Base
                 {
@@ -92,30 +93,30 @@ namespace SkyrimLib.Generator
                 this._base.Using.Add("System.Linq");
                 var ns = new Namespace("SkyrimLib");
                 this._base.Namespaces.Add(ns);
-                this._name = type;
-                Records.Add(type);
-                this._genClass = new Class(type) {Modifiers = Modifiers.Public | Modifiers.Sealed};
-                var s1 = new Field("uint", "FieldType")
+                this._name = name;
+                Records.Add(name);
+                this._genClass = new Class(name) {Modifiers = Modifiers.Public | Modifiers.Sealed};
+                var s1 = new Field("Signature", "FieldType")
                 {
-                    Value = BitConverter.ToUInt32(System.Text.Encoding.ASCII.GetBytes(type), 0).ToString(),
-                    Modifiers = Modifiers.Const | Modifiers.Public
+                    Value = $"Signature.FromString(\"{name}\")",
+                    Modifiers = Modifiers.Static | Modifiers.Public | Modifiers.ReadOnly
                 };
                 this._genClass.Members.Add(s1);
 
                 this._genClass.Extends.Add("Record");
 
-                this._constructorRead = new Method(null, type)
+                this._constructorRead = new Method(null, name)
                 {
                     Parameters = "IReader headerReader, IReader dataReader",
                     ConstructorInvocation = "base(headerReader, dataReader)",
-                    Modifiers = Modifiers.Internal, 
+                    Modifiers = Modifiers.Internal,
                     Body = new Builder()
                 };
                 this._genClass.Members.Add(this._constructorRead);
 
-                this._constructorEmpty = new Method(null, type)
+                this._constructorEmpty = new Method(null, name)
                 {
-                    ConstructorInvocation = "base(FieldType)", 
+                    ConstructorInvocation = "base(FieldType)",
                     Modifiers = Modifiers.Public
                 };
                 this._genClass.Members.Add(this._constructorEmpty);
@@ -126,7 +127,7 @@ namespace SkyrimLib.Generator
                 };
                 this._getSubRecordsForWriting.Body.AppendLine("var ret = new List<SubRecord>();");
                 this._genClass.Members.Add(this._getSubRecordsForWriting);
-                
+
                 ns.Types.Add(this._genClass);
             }
 
@@ -134,7 +135,7 @@ namespace SkyrimLib.Generator
             {
                 return new RecordBuilder(type, description);
             }
-            
+
             private static string GetLength(string name, FileFormat format)
             {
                 if (name == null) name = "Value";
@@ -142,7 +143,6 @@ namespace SkyrimLib.Generator
 
                 var prefix = string.Empty;
                 if (format.LengthPrefixed)
-                {
                     switch (format.LengthType)
                     {
                         case "byte":
@@ -158,7 +158,6 @@ namespace SkyrimLib.Generator
                             prefix = "8 + ";
                             break;
                     }
-                }
 
                 var suffix = string.Empty;
                 if (format.NullTerminated) suffix = " + 1";
@@ -174,6 +173,7 @@ namespace SkyrimLib.Generator
                     p.Modifiers |= Modifiers.ReadOnly;
                     p.Value = $"new {this._name}_{name}()";
                 }
+
                 this._genClass.Members.Add(p);
 
                 if (required)
@@ -195,12 +195,12 @@ namespace SkyrimLib.Generator
             private void AddSubRecordNoField(string name, string description, bool required, FileFormat format)
             {
                 SubRecords.Add((this._name, $"{this._name}_{name}"));
-                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
+                var c = new Class($"{this._name}_{name}") {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
-                var s1 = new Field("uint", "FieldType")
+                var s1 = new Field("Signature", "FieldType")
                 {
-                    Value = BitConverter.ToUInt32(System.Text.Encoding.ASCII.GetBytes(name), 0).ToString(),
-                    Modifiers = Modifiers.Const | Modifiers.Public
+                    Value = $"Signature.FromString(\"{name}\")",
+                    Modifiers = Modifiers.Static | Modifiers.Public | Modifiers.ReadOnly
                 };
                 c.Members.Add(s1);
 
@@ -265,7 +265,7 @@ namespace SkyrimLib.Generator
                 ns.Types.Add(c);
                 File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}_{name}.cs", bse.BuildCode(true));
             }
-            
+
             internal void AddSubRecordList(string name, string description, FileFormat format)
             {
                 SubRecords.Add((this._name, $"{this._name}_{name}"));
@@ -278,15 +278,16 @@ namespace SkyrimLib.Generator
 
                 this._constructorRead.Body.AppendLine(
                     $"this.{name} = this.Fields.First(x => x.Type == {this._name}_{name}.FieldType) as {this._name}_{name};");
-                this._getSubRecordsForWriting.Body.AppendLine($"if(this.{name}.Values.Count > 0) ret.Add(this.{name});");
-                
+                this._getSubRecordsForWriting.Body.AppendLine(
+                    $"if(this.{name}.Values.Count > 0) ret.Add(this.{name});");
+
                 /* Backing class */
-                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
+                var c = new Class($"{this._name}_{name}") {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
-                var s1 = new Field("uint", "FieldType")
+                var s1 = new Field("Signature", "FieldType")
                 {
-                    Value = BitConverter.ToUInt32(System.Text.Encoding.ASCII.GetBytes(name), 0).ToString(),
-                    Modifiers = Modifiers.Const | Modifiers.Public
+                    Value = $"Signature.FromString(\"{name}\")",
+                    Modifiers = Modifiers.Static | Modifiers.Public | Modifiers.ReadOnly
                 };
                 c.Members.Add(s1);
 
@@ -353,9 +354,12 @@ namespace SkyrimLib.Generator
                 var primary = fields.First(x => x.primary);
                 foreach (var field in fields.Where(field => !field.primary))
                 {
-                    this._getSubRecordsForWriting.Body.AppendLine($"while(this.{field.name}.Count > this.{primary.name}.Count) this.{field.name}.RemoveAt(this.{field.name}.Count - 1);");
-                    this._getSubRecordsForWriting.Body.AppendLine($"while(this.{field.name}.Count < this.{primary.name}.Count) this.{field.name}.Add(new {this._name}_{field.name}());");
+                    this._getSubRecordsForWriting.Body.AppendLine(
+                        $"while(this.{field.name}.Count > this.{primary.name}.Count) this.{field.name}.RemoveAt(this.{field.name}.Count - 1);");
+                    this._getSubRecordsForWriting.Body.AppendLine(
+                        $"while(this.{field.name}.Count < this.{primary.name}.Count) this.{field.name}.Add(new {this._name}_{field.name}());");
                 }
+
                 this._getSubRecordsForWriting.Body.AppendLine($"for(var i = 0; i < this.{primary.name}.Count; i++){{");
                 this._getSubRecordsForWriting.Body.EnterBlock();
 
@@ -367,10 +371,12 @@ namespace SkyrimLib.Generator
                         Value = $"new List<{this._name}_{field.name}>()"
                     };
                     this._genClass.Members.Add(f);
-                    this._constructorRead.Body.AppendLine($"this.{field.name}.AddRange(this.Fields.Where(x => x.Type == {this._name}_{field.name}.FieldType).Cast<{this._name}_{field.name}>());");
+                    this._constructorRead.Body.AppendLine(
+                        $"this.{field.name}.AddRange(this.Fields.Where(x => x.Type == {this._name}_{field.name}.FieldType).Cast<{this._name}_{field.name}>());");
                     this.AddSubRecordNoField(field.name, field.description, false, field.format);
                     this._getSubRecordsForWriting.Body.AppendLine($"ret.Add(this.{field.name}[i]);");
                 }
+
                 this._getSubRecordsForWriting.Body.LeaveBlock();
                 this._getSubRecordsForWriting.Body.AppendLine("}");
             }
@@ -385,6 +391,7 @@ namespace SkyrimLib.Generator
                     p.Modifiers |= Modifiers.ReadOnly;
                     p.Value = $"new {this._name}_{name}()";
                 }
+
                 this._genClass.Members.Add(p);
 
                 if (required)
@@ -399,13 +406,13 @@ namespace SkyrimLib.Generator
                         $"this.{name} = this.Fields.FirstOrDefault(x => x.Type == {this._name}_{name}.FieldType) as {this._name}_{name};");
                     this._getSubRecordsForWriting.Body.AppendLine($"if(this.{name} != null) ret.Add(this.{name});");
                 }
-                
-                var c = new Class($"{this._name}_{name}")  {Modifiers = Modifiers.Public | Modifiers.Sealed};
+
+                var c = new Class($"{this._name}_{name}") {Modifiers = Modifiers.Public | Modifiers.Sealed};
                 c.Extends.Add("SubRecord");
-                var s1 = new Field("uint", "FieldType")
+                var s1 = new Field("Signature", "FieldType")
                 {
-                    Value = BitConverter.ToUInt32(System.Text.Encoding.ASCII.GetBytes(name), 0).ToString(),
-                    Modifiers = Modifiers.Const | Modifiers.Public
+                    Value = $"Signature.FromString(\"{name}\")",
+                    Modifiers = Modifiers.Static | Modifiers.Public | Modifiers.ReadOnly
                 };
                 c.Members.Add(s1);
 
@@ -449,6 +456,7 @@ namespace SkyrimLib.Generator
                     writer.Body.AppendLine($"writer.{field.format.Write}(this.{field.name});");
                     lengths.Add($"{GetLength(null, field.format)}");
                 }
+
                 length.Body.AppendLine("return (ushort) (" + string.Join(" + ", lengths) + ");");
 
                 var bse = new Base
@@ -468,11 +476,11 @@ namespace SkyrimLib.Generator
             {
                 this._constructorRead.Body.AppendLine("this.Fields.Clear();");
                 this._getSubRecordsForWriting.Body.AppendLine("return ret;");
-                
+
                 File.WriteAllText($"../../../../SkyrimLib/Generated/{this._name}.cs", this._base.BuildCode(true));
             }
         }
-        
+
         private static void ParseSubRecord([NotNull] XElement subRecord, RecordBuilder r)
         {
             var type = subRecord.Attribute("type").Value;
@@ -480,9 +488,7 @@ namespace SkyrimLib.Generator
             bool.TryParse(subRecord.Attribute("required")?.Value, out var required);
             var name = subRecord.Attribute("name").Value;
             if (FileFormats.Formats.TryGetValue(type, out var format))
-            {
                 r.AddSubRecord(name, description, required, format);
-            }
             else
                 switch (type)
                 {
@@ -530,6 +536,7 @@ namespace SkyrimLib.Generator
                     }
                 }
         }
+
         private static void ParseRecord([NotNull] XElement record)
         {
             var type = record.Attribute("type").Value;
@@ -537,10 +544,7 @@ namespace SkyrimLib.Generator
 
             var c = RecordBuilder.Begin(type, description);
 
-            foreach (var field in record.Elements("SubRecords").First().Elements("SubRecord"))
-            {
-                ParseSubRecord(field, c);
-            }
+            foreach (var field in record.Elements("SubRecords").First().Elements("SubRecord")) ParseSubRecord(field, c);
 
             c.End();
         }
@@ -554,58 +558,54 @@ namespace SkyrimLib.Generator
             };
             bse.Using.Add("System");
             bse.Using.Add("System.Collections.Generic");
-            
+
             var ns = new Namespace("SkyrimLib");
             bse.Namespaces.Add(ns);
 
             var c = new Class("Registry");
             ns.Types.Add(c);
             c.Modifiers = Modifiers.Internal | Modifiers.Static;
-            var f1 = new Field("IReadOnlyDictionary<uint, Func<IReader, IReader, Record>>", "ParsedRecords")
+            var f1 = new Field("IReadOnlyDictionary<Signature, Func<IReader, IReader, Record>>", "ParsedRecords")
             {
                 Modifiers = Modifiers.Internal | Modifiers.Static | Modifiers.ReadOnly
             };
             c.Members.Add(f1);
             var f2 = new Field(
-                "IReadOnlyDictionary<(uint record, uint subrecord), Func<IReader, IReader, uint, SubRecord>>",
+                "IReadOnlyDictionary<(Signature record, Signature subrecord), Func<IReader, IReader, uint, SubRecord>>",
                 "ParsedSubRecords") {Modifiers = Modifiers.Internal | Modifiers.Static | Modifiers.ReadOnly};
             c.Members.Add(f2);
 
             var m = new Method(null, "Registry") {Modifiers = Modifiers.Static, Body = new Builder()};
-            m.Body.AppendLine("ParsedRecords = new Dictionary<uint, Func<IReader, IReader, Record>> {");
+            m.Body.AppendLine("ParsedRecords = new Dictionary<Signature, Func<IReader, IReader, Record>> {");
             m.Body.EnterBlock();
             foreach (var r in Records)
-            {
-                m.Body.AppendLine($"{{{r.Title()}.FieldType, (headerReader, dataReader) => new {r.Title()}(headerReader, dataReader)}},");
-            }
+                m.Body.AppendLine(
+                    $"{{{r.Title()}.FieldType, (headerReader, dataReader) => new {r.Title()}(headerReader, dataReader)}},");
             m.Body.LeaveBlock();
             m.Body.AppendLine("};");
-            m.Body.AppendLine("ParsedSubRecords = new Dictionary<(uint record, uint subrecord), Func<IReader, IReader, uint, SubRecord>> {");
+            m.Body.AppendLine(
+                "ParsedSubRecords = new Dictionary<(Signature record, Signature subrecord), Func<IReader, IReader, uint, SubRecord>> {");
             m.Body.EnterBlock();
             foreach (var sr in SubRecords)
-            {
-                m.Body.AppendLine($"{{({sr.main}.FieldType, {sr.sub}.FieldType), (headerReader, dataReader, size) => new {sr.sub}(headerReader, dataReader, size)}},");
-            }
+                m.Body.AppendLine(
+                    $"{{({sr.main}.FieldType, {sr.sub}.FieldType), (headerReader, dataReader, size) => new {sr.sub}(headerReader, dataReader, size)}},");
             m.Body.LeaveBlock();
             m.Body.AppendLine("};");
             c.Members.Add(m);
-            
+
             File.WriteAllText("../../../../SkyrimLib/Generated/Registry.cs", bse.BuildCode(true));
         }
-        
+
         private static void Main(string[] args)
         {
             FileFormats.Parse("resources/FileFormats.xml");
-            var doc = XDocument.Load("resources/Records.xml");
+            var doc = XDocument.Load("resources/SSE_Records.xml");
 
             if (doc.Root != null)
                 foreach (var record in doc.Root.Elements("Record"))
-                {
                     ParseRecord(record);
-                }
 
             GenerateRegistry();
-
         }
     }
 }

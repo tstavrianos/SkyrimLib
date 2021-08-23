@@ -8,8 +8,8 @@ namespace SkyrimLib
     public sealed class Group : IRecordOrGroup
     {
         // ReSharper disable once InconsistentNaming
-        public const uint GRUP = 1347768903;
-        public uint Type { get; }
+        public static readonly Signature GRUP = Signature.FromString("GRUP");
+        public Signature Type { get; }
         public uint Size { get; }
         public uint Label { get; set; }
         public int GroupType { get; set; }
@@ -21,7 +21,7 @@ namespace SkyrimLib
 
         internal Group(IReader headerReader, IReader dataReader)
         {
-            this.Type = headerReader.ReadUInt32(0);
+            this.Type = Signature.Read(0, headerReader);
             this.Size = headerReader.ReadUInt32(4);
             this.Label = headerReader.ReadUInt32(8);
             this.GroupType = headerReader.ReadInt32(12);
@@ -36,25 +36,34 @@ namespace SkyrimLib
             while (true)
             {
                 if (children.Length < 4) break;
-                var type = children.ReadUInt32(0);
+                var type = Signature.Read(0, children);
                 var size = children.ReadUInt32(4);
-                IRecordOrGroup item;
+                IRecordOrGroup item = null;
                 var actualSize = size;
                 var childHeader = children.Slice(0, 24);
 
+                var keep = false;
                 if (type == GRUP)
                 {
-                    var childData = children.Slice(24, (int) size - 24);
+                    /*var childData = children.Slice(24, (int) size - 24);
                     item = new Group(childHeader, childData);
+                    keep = true;*/
                 }
                 else
                 {
                     actualSize += 24;
-                    var childData = children.Slice(24, (int) size);
-                    item = Registry.ParsedRecords.TryGetValue(type, out var constructor) ? constructor(childHeader, childData) : new Record(childHeader, childData);
+                    if (Registry.ParsedRecords.ContainsKey(type))
+                    {
+                        var childData = children.Slice(24, (int) size);
+                        item
+                            = Registry.ParsedRecords.TryGetValue(type, out var constructor)
+                                ? constructor(childHeader, childData)
+                                : new Record(childHeader, childData);
+                        keep = true;
+                    }
                 }
 
-                this.Children.Add(item);
+                if(keep) this.Children.Add(item);
                 children = children.Slice((int) actualSize);
             }
         }
@@ -65,14 +74,11 @@ namespace SkyrimLib
             {
                 using (var childWriter = new StreamWriter(ms))
                 {
-                    foreach (var child in this.Children)
-                    {
-                        child.Write(childWriter);
-                    }
+                    foreach (var child in this.Children) child.Write(childWriter);
 
                     var children = ms.ToArray();
 
-                    writer.WriteUInt32(this.Type);
+                    writer.WriteBytes(this.Type.Bytes);
                     writer.WriteUInt32((uint) children.Length + 24);
                     writer.WriteUInt32(this.Label);
                     writer.WriteInt32(this.GroupType);
